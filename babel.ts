@@ -9,9 +9,9 @@ export default ({types: t, /*template*/}, {shortenPath, absPath}: {
 } = {}) => {
 	return ({
 		visitor: {
-			ImportDeclaration(path) {
+			ImportDeclaration(path, stats) {
 				const source = path.node.source.value
-				if (source !== '@react-loadable/revised') return
+				if (!(stats.opts.hocSources ?? ['@react-loadable/revised']).includes(source)) return
 
 				const defaultSpecifier = path.get('specifiers').find(specifier => specifier.isImportDefaultSpecifier())
 				if (!defaultSpecifier) return
@@ -21,7 +21,16 @@ export default ({types: t, /*template*/}, {shortenPath, absPath}: {
 
 				refPath:
 					for (const refPath of binding.referencePaths) {
-						const callExpression = refPath.parentPath
+						let callExpression = refPath.parentPath
+
+                        if (
+                            callExpression.isMemberExpression() &&
+                            callExpression.node.computed === false &&
+                            (stats.opts.hocIdentifiers || []).some(identifier => callExpression.get('property').isIdentifier({ name: identifier }))
+                          ) {
+                            callExpression = callExpression.parentPath;
+                        }
+
 						if (!callExpression.isCallExpression()) continue
 
 						const args = callExpression.get('arguments')
@@ -96,6 +105,24 @@ export default ({types: t, /*template*/}, {shortenPath, absPath}: {
 								)
 							)
 						)
+                        loader.insertAfter(
+							t.objectProperty(
+								t.identifier('webpackChunkNames'),
+								t.arrayExpression(
+									dynamicImports.map(dynamicImport => {
+                                        const leadingComments = dynamicImport.get('arguments')[0].node.leadingComments ?? []
+
+                                        const webpackChunkName = leadingComments
+                                            .map(leadingComment => leadingComment.value)
+                                            .filter(comment => /webpackChunkName/.test(comment))
+                                            .map(comment => comment.split(':')[1].replace(/["']/g, '').trim())
+                                            [0]
+
+                                        return t.stringLiteral(webpackChunkName || '')
+                                    })
+                                )
+                            )
+                        )
 					}
 			}
 		}

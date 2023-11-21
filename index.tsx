@@ -1,4 +1,4 @@
-import {
+import React, {
 	ComponentProps,
 	ComponentType,
 	createContext,
@@ -16,11 +16,11 @@ type LoaderTypeOptional<T, P> = () => Promise<LoadableComponent<T, P>> | undefin
 
 const ALL_INITIALIZERS: LoaderType<any, any>[] = []
 const READY_INITIALIZERS: LoaderTypeOptional<any, any>[] = []
-const CaptureContext = createContext<((moduleId: string) => any) | undefined>(undefined)
+const CaptureContext = createContext<((moduleId: string, webpackChunkName?: string) => any) | undefined>(undefined)
 CaptureContext.displayName = 'Capture'
 
 export function Capture({report, children}: {
-	report(moduleId: string): any
+	report(moduleId: string, webpackChunkName?: string): any
 	children: ReactNode
 }) {
 	return <CaptureContext.Provider value={report}>
@@ -135,7 +135,9 @@ function createLoadableComponent<T, P>(
 		}, [])
 
 		const loadModule = useCallback(async () => {
-			if (report && Array.isArray(opts['modules'])) for (const moduleName of opts['modules']) report(moduleName)
+            const modules = opts['modules'];
+            const webpackChunkNames = opts['webpackChunkNames'];
+			if (report && Array.isArray(modules)) for (const index in modules) report(modules[index], (webpackChunkNames || [])[index])
 			if (loadState.error || loadState.loaded) return
 			try {
 				await loadState.promise
@@ -168,7 +170,12 @@ function createLoadableComponent<T, P>(
 			: render(state.loaded as any, props as any)
 	}
 
-	LoadableComponent.preload = init
+	LoadableComponent.preload = (forceReload) => {
+		if (!loadState || (loadState.error && forceReload))
+            loadState = load(loader as any)
+
+		return loadState.promise
+	}
 	LoadableComponent.displayName = `LoadableComponent(${Array.isArray(opts['modules']) ? opts['modules'].join('-') : ''})`
 
 	return LoadableComponent as any
