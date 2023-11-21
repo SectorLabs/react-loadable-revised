@@ -75,7 +75,7 @@ type LoadComponent<P> = {
 	default: ComponentType<P>
 } | ComponentType<P>
 
-const resolve = <P, >(obj: LoadComponent<P>): ComponentType<P> => (obj as any)?.__esModule ? (obj as any).default : obj
+const resolve = <P, >(obj: LoadComponent<P>): ComponentType<P> => (obj as any).__esModule ? (obj as any).default : obj
 const defaultRenderer = <P, T extends {default: ComponentType<P>}>(
 	loaded: T,
 	props: T extends {default: ComponentType<infer P>} ? P : never
