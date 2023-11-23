@@ -12,6 +12,7 @@ import React, {
 } from 'react'
 
 type LoaderType<T, P> = () => Promise<LoadableComponent<T, P>>
+type PreloadLoaderType<T, P> = (force?: boolean) => Promise<LoadableComponent<T, P>>
 type LoaderTypeOptional<T, P> = () => Promise<LoadableComponent<T, P>> | undefined
 
 const ALL_INITIALIZERS: LoaderType<any, any>[] = []
@@ -37,7 +38,9 @@ type LoadableOptions<T, P> = {
 	}>
 	webpack?(): string[]
 	loader(): Promise<T>
-	render?(loaded: T, props: P): ReactElement
+	render?(loaded: T, props: P): ReactElement,
+    modules?: string[],
+    webpackChunkNames?: string[],
 }
 
 type LoadableComponent<T, P> = ComponentType<T extends {default: ComponentType<infer Props>}
@@ -64,7 +67,7 @@ const load = <T, P>(loader: LoaderType<T, P>) => {
 		try {
 			resolve(state.loaded = await loader())
 		} catch (e) {
-			reject(state.error = e)
+			reject(state.error = e as Error)
 		}
 	})
 	return state
@@ -99,7 +102,7 @@ function createLoadableComponent<T, P>(
 	}: LoadableOptions<T, P>
 ): LoadableComponent<T, P> & {
 	displayName: string
-	preload: LoaderType<T, P>
+	preload: PreloadLoaderType<T, P>
 } {
 	if (!Loading) throw new Error('react-loadable requires a `loading` component')
 
@@ -170,7 +173,7 @@ function createLoadableComponent<T, P>(
 			: render(state.loaded as any, props as any)
 	}
 
-	LoadableComponent.preload = (forceReload) => {
+	LoadableComponent.preload = (forceReload: boolean) => {
 		if (!loadState || (loadState.error && forceReload))
             loadState = load(loader as any)
 

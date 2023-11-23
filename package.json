@@ -1,6 +1,6 @@
 {
-	"name": "@sector-labs/revised",
-	"version": "1.5.0",
+	"name": "@sector-labs/react-loadable-revised",
+	"version": "1.6.0",
 	"description": "A higher order component for loading components with promises",
 	"main": "index.js",
 	"author": "Sang Tran <t@sang.jp>",

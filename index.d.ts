@@ -1,5 +1,5 @@
 import { ComponentType, ReactElement, ReactNode } from 'react';
-type LoaderType<T, P> = () => Promise<LoadableComponent<T, P>>;
+type PreloadLoaderType<T, P> = (force?: boolean) => Promise<LoadableComponent<T, P>>;
 export declare function Capture({ report, children }: {
     report(moduleId: string, webpackChunkName?: string): any;
     children: ReactNode;
@@ -15,6 +15,8 @@ type LoadableOptions<T, P> = {
     webpack?(): string[];
     loader(): Promise<T>;
     render?(loaded: T, props: P): ReactElement;
+    modules?: string[];
+    webpackChunkNames?: string[];
 };
 type LoadableComponent<T, P> = ComponentType<T extends {
     default: ComponentType<infer Props>;
@@ -23,6 +25,6 @@ export declare const preloadAll: () => Promise<void>;
 export declare const preloadReady: () => Promise<void>;
 declare const loadable: <T, P>(opts: LoadableOptions<T, P>) => LoadableComponent<T, P> & {
     displayName: string;
-    preload: LoaderType<T, P>;
+    preload: PreloadLoaderType<T, P>;
 };
 export default loadable;
