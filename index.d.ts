@@ -1,7 +1,8 @@
 import { ComponentType, ReactElement, ReactNode } from 'react';
 type PreloadLoaderType<T, P> = (force?: boolean) => Promise<LoadableComponent<T, P>>;
-export declare function Capture({ report, children }: {
+export declare function Capture({ report, renderPreamble, children }: {
     report(moduleId: string, webpackChunkName?: string): any;
+    renderPreamble(): ReactNode;
     children: ReactNode;
 }): JSX.Element;
 export declare namespace Capture {

@@ -17,14 +17,15 @@ type LoaderTypeOptional<T, P> = () => Promise<LoadableComponent<T, P>> | undefin
 
 const ALL_INITIALIZERS: LoaderType<any, any>[] = []
 const READY_INITIALIZERS: LoaderTypeOptional<any, any>[] = []
-const CaptureContext = createContext<((moduleId: string, webpackChunkName?: string) => any) | undefined>(undefined)
+const CaptureContext = createContext<({report: (moduleId: string, webpackChunkName?: string) => any, renderPreamble?: () => ReactNode}) | undefined>({report: ()=>null})
 CaptureContext.displayName = 'Capture'
 
-export function Capture({report, children}: {
+export function Capture({report, renderPreamble, children}: {
 	report(moduleId: string, webpackChunkName?: string): any
-	children: ReactNode
+	renderPreamble(): ReactNode
+	children: ReactNode,
 }) {
-	return <CaptureContext.Provider value={report}>
+	return <CaptureContext.Provider value={{report, renderPreamble}}>
 		{children}
 	</CaptureContext.Provider>
 }
@@ -120,7 +121,7 @@ function createLoadableComponent<T, P>(
 	const LoadableComponent = (props: ComponentProps<LoadableComponent<T, P>>) => {
 		init()
 
-		const report = useContext(CaptureContext)
+		const { report, renderPreamble } = useContext(CaptureContext) || {}
 
 		const [state, setState] = useState<LoadableState<T, P>>({
 			error: loadState.error,
@@ -170,7 +171,11 @@ function createLoadableComponent<T, P>(
 
 		return !state.loaded || state.error
 			? <Loading error={state.error} retry={retry}/>
-			: render(state.loaded as any, props as any)
+			:
+			<>
+				{renderPreamble && renderPreamble()}
+				{render(state.loaded as any, props as any)}
+			</>
 	}
 
 	LoadableComponent.preload = (forceReload: boolean) => {
