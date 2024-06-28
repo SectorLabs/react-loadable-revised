@@ -32,7 +32,7 @@ export function Capture({report, renderPreamble, children}: {
 
 Capture.displayName = 'Capture'
 
-type LoadableOptions<T, P> = {
+export type LoadableOptions<T, P> = {
 	loading: ComponentType<{
 		error?: Error
 		retry(): any
@@ -44,7 +44,7 @@ type LoadableOptions<T, P> = {
     webpackChunkNames?: string[],
 }
 
-type LoadableComponent<T, P> = ComponentType<T extends {default: ComponentType<infer Props>}
+export type LoadableComponent<T, P> = ComponentType<T extends {default: ComponentType<infer Props>}
 	? Props
 	: P // this conditional branch is not 100% correct. It should be never if render property is not provided
 	>

@@ -8,7 +8,7 @@ export declare function Capture({ report, renderPreamble, children }: {
 export declare namespace Capture {
     var displayName: string;
 }
-type LoadableOptions<T, P> = {
+export type LoadableOptions<T, P> = {
     loading: ComponentType<{
         error?: Error;
         retry(): any;
@@ -19,7 +19,7 @@ type LoadableOptions<T, P> = {
     modules?: string[];
     webpackChunkNames?: string[];
 };
-type LoadableComponent<T, P> = ComponentType<T extends {
+export type LoadableComponent<T, P> = ComponentType<T extends {
     default: ComponentType<infer Props>;
 } ? Props : P>;
 export declare const preloadAll: () => Promise<void>;
